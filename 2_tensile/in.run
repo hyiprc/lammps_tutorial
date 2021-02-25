@@ -1,0 +1,56 @@
+# LAMMPS input script
+
+clear
+variable seed equal 7545
+
+# ----- System -----
+units       metal
+boundary p p p
+atom_style  atomic
+read_data create/Al_polycrystal.lmp
+
+variable T equal 300.
+variable P equal 1.0
+
+# ----- Force Field -----
+pair_style eam/alloy
+pair_coeff  * *  AlO.eam.alloy Al
+neighbor 2.0 nsq
+neigh_modify delay 0 every 1 check yes
+
+
+# ----- Output -----
+thermo        1000
+thermo_style custom step atoms etotal ke pe temp press lx ly lz pxx pyy pzz density
+thermo_modify line multi norm yes flush yes format float %.6f
+
+
+# ----- Minimize -----
+min_style cg
+minimize 1e-4 1e-6 1000 10000
+
+
+# ----- Short Equilibration -----
+velocity  all create ${T} ${seed}
+fix rmMomentum all momentum 1 linear 1 1 1
+
+fix integrate all  npt temp ${T} ${T} 0.1 iso ${P} ${P} 1.0
+timestep 0.001
+run 10000
+unfix integrate
+
+
+# ----- Deformation -----
+reset_timestep 0
+shell "mkdir -p frames"
+dump positions all  custom 1000 frames/step_*.lammpstrj id type x y z vx vy vz fx fy fz
+
+variable srate equal "1.0e9 *1.0e-12" # strain rate in /ps
+variable smax equal 0.05 # max strain
+variable sstep equal "0.001/(v_srate*dt)" # strain every 0.1%
+variable Nrun equal "v_smax /(v_srate*dt)" # tot num steps
+
+fix tensile all deform ${sstep} z erate ${srate} remap x units box
+fix integrate all  nvt temp ${T} ${T} 0.1
+timestep 0.001 # 1 fs 
+run ${Nrun}

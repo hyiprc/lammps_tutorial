@@ -1,0 +1,565 @@
+LAMMPS (3 Mar 2020)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:94)
+  using 1 OpenMP thread(s) per MPI task
+# LAMMPS input script
+
+clear
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:94)
+  using 1 OpenMP thread(s) per MPI task
+variable seed equal 7545
+
+# ----- System -----
+units       metal
+boundary p p p
+atom_style  atomic
+read_data create/Al_polycrystal.lmp
+  orthogonal box = (0 0 0) to (30 30 60)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  3259 atoms
+  read_data CPU = 0.0183129 secs
+
+variable T equal 300.
+variable P equal 1.0
+
+# ----- Force Field -----
+pair_style eam/alloy
+pair_coeff  * *  AlO.eam.alloy Al
+Reading potential file AlO.eam.alloy with DATE: 2015-02-19
+neighbor 2.0 nsq
+neigh_modify delay 0 every 1 check yes
+
+
+# ----- Output -----
+thermo        1000
+thermo_style custom step atoms etotal ke pe temp press lx ly lz pxx pyy pzz density
+thermo_modify line multi norm yes flush yes format float %.6f
+
+# ----- Minimize -----
+min_style cg
+minimize 1e-4 1e-6 1000 10000
+Neighbor list info ...
+  update every 1 steps, delay 0 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 10.4147
+  ghost atom cutoff = 10.4147
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair eam/alloy, perpetual
+      attributes: half, newton on
+      pair build: half/nsq/newton
+      stencil: none
+      bin: none
+Per MPI rank memory allocation (min/avg/max) = 6.606 | 6.606 | 6.606 Mbytes
+---------------- Step        0 ----- CPU =      0.0000 (sec) ----------------
+Step     =              0 Atoms    =           3259 TotEng   = -3.074204 
+KinEng   = 0.000000 PotEng   = -3.074204 Temp     = 0.000000 
+Press    = 52852.806703 Lx       = 30.000000 Ly       = 30.000000 
+Lz       = 60.000000 Pxx      = 62136.053626 Pyy      = 41502.919182 
+Pzz      = 54919.447301 Density  = 2.703844 
+---------------- Step       43 ----- CPU =      1.2412 (sec) ----------------
+Step     =             43 Atoms    =           3259 TotEng   = -3.383453 
+KinEng   = 0.000000 PotEng   = -3.383453 Temp     = 0.000000 
+Press    = 6108.775932 Lx       = 30.000000 Ly       = 30.000000 
+Lz       = 60.000000 Pxx      = 8053.880372 Pyy      = 4349.824743 
+Pzz      = 5922.622682 Density  = 2.703844 
+Loop time of 1.2418 on 1 procs for 43 steps with 3259 atoms
+
+100.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = energy tolerance
+  Energy initial, next-to-last, final = 
+        -3.07420400347     -3.38313748436     -3.38345343367
+  Force two-norm initial, final = 418.906 2.13363
+  Force max component initial, final = 151.703 0.457286
+  Final line search alpha, max atom move = 0.228107 0.10431
+  Iterations, force evaluations = 43 43
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.62059    | 0.62059    | 0.62059    |   0.0 | 49.98
+Neigh   | 0.61348    | 0.61348    | 0.61348    |   0.0 | 49.40
+Comm    | 0.0021589  | 0.0021589  | 0.0021589  |   0.0 |  0.17
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.005561   |            |       |  0.45
+
+Nlocal:    3259 ave 3259 max 3259 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:    9284 ave 9284 max 9284 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:    487906 ave 487906 max 487906 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 487906
+Ave neighs/atom = 149.71
+Neighbor list builds = 3
+Dangerous builds = 0
+
+# ----- Short Equilibration -----
+velocity  all create ${T} ${seed}
+velocity  all create 300 ${seed}
+velocity  all create 300 7545
+fix rmMomentum all momentum 1 linear 1 1 1
+
+fix integrate all  npt temp ${T} ${T} 0.1 iso ${P} ${P} 1.0
+fix integrate all  npt temp 300 ${T} 0.1 iso ${P} ${P} 1.0
+fix integrate all  npt temp 300 300 0.1 iso ${P} ${P} 1.0
+fix integrate all  npt temp 300 300 0.1 iso 1 ${P} 1.0
+fix integrate all  npt temp 300 300 0.1 iso 1 1 1.0
+timestep 0.001
+run 10000
+Per MPI rank memory allocation (min/avg/max) = 5.481 | 5.481 | 5.481 Mbytes
+---------------- Step       43 ----- CPU =      0.0000 (sec) ----------------
+Step     =             43 Atoms    =           3259 TotEng   = -3.344687 
+KinEng   = 0.038766 PotEng   = -3.383453 Temp     = 300.000000 
+Press    = 8607.753237 Lx       = 30.000000 Ly       = 30.000000 
+Lz       = 60.000000 Pxx      = 10546.704131 Pyy      = 6856.450806 
+Pzz      = 8420.104774 Density  = 2.703844 
+---------------- Step     1000 ----- CPU =     15.0319 (sec) ----------------
+Step     =           1000 Atoms    =           3259 TotEng   = -3.312820 
+KinEng   = 0.038025 PotEng   = -3.350844 Temp     = 294.262303 
+Press    = -135.457476 Lx       = 30.224860 Ly       = 30.224860 
+Lz       = 60.449720 Pxx      = 304.572199 Pyy      = -1024.823878 
+Pzz      = 313.879250 Density  = 2.643945 
+---------------- Step     2000 ----- CPU =     30.1533 (sec) ----------------
+Step     =           2000 Atoms    =           3259 TotEng   = -3.314476 
+KinEng   = 0.039672 PotEng   = -3.354148 Temp     = 307.011440 
+Press    = -286.973058 Lx       = 30.215586 Ly       = 30.215586 
+Lz       = 60.431173 Pxx      = 157.062460 Pyy      = -968.820947 
+Pzz      = -49.160689 Density  = 2.646381 
+---------------- Step     3000 ----- CPU =     46.1056 (sec) ----------------
+Step     =           3000 Atoms    =           3259 TotEng   = -3.317350 
+KinEng   = 0.038849 PotEng   = -3.356198 Temp     = 300.638941 
+Press    = 94.842509 Lx       = 30.201490 Ly       = 30.201490 
+Lz       = 60.402980 Pxx      = 1249.111485 Pyy      = -1255.743750 
+Pzz      = 291.159791 Density  = 2.650088 
+---------------- Step     4000 ----- CPU =     60.9872 (sec) ----------------
+Step     =           4000 Atoms    =           3259 TotEng   = -3.317469 
+KinEng   = 0.038592 PotEng   = -3.356061 Temp     = 298.648737 
+Press    = 60.040182 Lx       = 30.203064 Ly       = 30.203064 
+Lz       = 60.406127 Pxx      = 1364.841840 Pyy      = -1858.435265 
+Pzz      = 673.713971 Density  = 2.649674 
+---------------- Step     5000 ----- CPU =     76.0399 (sec) ----------------
+Step     =           5000 Atoms    =           3259 TotEng   = -3.317848 
+KinEng   = 0.038873 PotEng   = -3.356721 Temp     = 300.827950 
+Press    = -106.354160 Lx       = 30.201367 Ly       = 30.201367 
+Lz       = 60.402734 Pxx      = 788.670431 Pyy      = -1432.223027 
+Pzz      = 324.490117 Density  = 2.650120 
+---------------- Step     6000 ----- CPU =     90.7428 (sec) ----------------
+Step     =           6000 Atoms    =           3259 TotEng   = -3.317148 
+KinEng   = 0.039564 PotEng   = -3.356712 Temp     = 306.172089 
+Press    = -1147.060225 Lx       = 30.217088 Ly       = 30.217088 
+Lz       = 60.434176 Pxx      = -238.433554 Pyy      = -2489.079391 
+Pzz      = -713.667729 Density  = 2.645986 
+---------------- Step     7000 ----- CPU =    105.4388 (sec) ----------------
+Step     =           7000 Atoms    =           3259 TotEng   = -3.318166 
+KinEng   = 0.038729 PotEng   = -3.356894 Temp     = 299.711004 
+Press    = -1883.306900 Lx       = 30.223385 Ly       = 30.223385 
+Lz       = 60.446769 Pxx      = -1353.726619 Pyy      = -3083.280276 
+Pzz      = -1212.913805 Density  = 2.644333 
+---------------- Step     8000 ----- CPU =    120.6622 (sec) ----------------
+Step     =           8000 Atoms    =           3259 TotEng   = -3.317226 
+KinEng   = 0.040271 PotEng   = -3.357497 Temp     = 311.645917 
+Press    = -1622.231967 Lx       = 30.219975 Ly       = 30.219975 
+Lz       = 60.439951 Pxx      = -1461.152274 Pyy      = -2776.863664 
+Pzz      = -628.679961 Density  = 2.645228 
+---------------- Step     9000 ----- CPU =    135.5824 (sec) ----------------
+Step     =           9000 Atoms    =           3259 TotEng   = -3.318874 
+KinEng   = 0.038504 PotEng   = -3.357378 Temp     = 297.971439 
+Press    = -812.803366 Lx       = 30.208655 Ly       = 30.208655 
+Lz       = 60.417310 Pxx      = -195.335647 Pyy      = -2151.472066 
+Pzz      = -91.602385 Density  = 2.648203 
+---------------- Step    10000 ----- CPU =    150.6503 (sec) ----------------
+Step     =          10000 Atoms    =           3259 TotEng   = -3.320011 
+KinEng   = 0.037939 PotEng   = -3.357950 Temp     = 293.601393 
+Press    = -259.994967 Lx       = 30.198986 Ly       = 30.198986 
+Lz       = 60.397971 Pxx      = 311.655021 Pyy      = -1625.931702 
+Pzz      = 534.291779 Density  = 2.650747 
+---------------- Step    10043 ----- CPU =    151.4493 (sec) ----------------
+Step     =          10043 Atoms    =           3259 TotEng   = -3.320159 
+KinEng   = 0.038126 PotEng   = -3.358285 Temp     = 295.043450 
+Press    = -357.828729 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 60.397843 Pxx      = 190.554829 Pyy      = -1607.107767 
+Pzz      = 343.066750 Density  = 2.650764 
+Loop time of 151.45 on 1 procs for 10000 steps with 3259 atoms
+
+Performance: 5.705 ns/day, 4.207 hours/ns, 66.028 timesteps/s
+100.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 132.68     | 132.68     | 132.68     |   0.0 | 87.61
+Neigh   | 16.917     | 16.917     | 16.917     |   0.0 | 11.17
+Comm    | 0.38895    | 0.38895    | 0.38895    |   0.0 |  0.26
+Output  | 0.0061297  | 0.0061297  | 0.0061297  |   0.0 |  0.00
+Modify  | 1.2666     | 1.2666     | 1.2666     |   0.0 |  0.84
+Other   |            | 0.1893     |            |       |  0.13
+
+Nlocal:    3259 ave 3259 max 3259 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:    9282 ave 9282 max 9282 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:    466916 ave 466916 max 466916 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 466916
+Ave neighs/atom = 143.27
+Neighbor list builds = 77
+Dangerous builds = 0
+unfix integrate
+
+# ----- Deformation -----
+reset_timestep 0
+dump positions all  custom 1000 frames/step_*.lammpstrj id type x y z vx vy vz fx fy fz
+
+variable srate equal "1.0e9 *1.0e-12" # strain rate in /ps
+variable smax equal 0.05 # max strain
+variable sstep equal "0.001/(v_srate*dt)" # strain every 0.1%
+variable Nrun equal "v_smax /(v_srate*dt)" # tot num steps
+
+fix tensile all deform ${sstep} z erate ${srate} remap x units box
+fix tensile all deform 1000 z erate ${srate} remap x units box
+fix tensile all deform 1000 z erate 0.001 remap x units box
+fix integrate all  nvt temp ${T} ${T} 0.1
+fix integrate all  nvt temp 300 ${T} 0.1
+fix integrate all  nvt temp 300 300 0.1
+timestep 0.001 # 1 fs
+run ${Nrun}
+run 50000
+Per MPI rank memory allocation (min/avg/max) = 7.005 | 7.005 | 7.005 Mbytes
+---------------- Step        0 ----- CPU =      0.0000 (sec) ----------------
+Step     =              0 Atoms    =           3259 TotEng   = -3.320159 
+KinEng   = 0.038126 PotEng   = -3.358285 Temp     = 295.043450 
+Press    = -357.828729 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 60.397843 Pxx      = 190.554829 Pyy      = -1607.107767 
+Pzz      = 343.066750 Density  = 2.650764 
+---------------- Step     1000 ----- CPU =     14.9525 (sec) ----------------
+Step     =           1000 Atoms    =           3259 TotEng   = -3.318197 
+KinEng   = 0.038221 PotEng   = -3.356418 Temp     = 295.778904 
+Press    = 106.387177 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 60.458241 Pxx      = 949.055516 Pyy      = -1187.579068 
+Pzz      = 557.685083 Density  = 2.648116 
+---------------- Step     2000 ----- CPU =     30.3566 (sec) ----------------
+Step     =           2000 Atoms    =           3259 TotEng   = -3.319497 
+KinEng   = 0.038705 PotEng   = -3.358202 Temp     = 299.530152 
+Press    = -1202.334607 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 60.518638 Pxx      = -362.278148 Pyy      = -2480.509596 
+Pzz      = -764.216076 Density  = 2.645473 
+---------------- Step     3000 ----- CPU =     45.0303 (sec) ----------------
+Step     =           3000 Atoms    =           3259 TotEng   = -3.320092 
+KinEng   = 0.038186 PotEng   = -3.358278 Temp     = 295.508975 
+Press    = -2022.709329 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 60.579036 Pxx      = -472.086713 Pyy      = -3501.141950 
+Pzz      = -2094.899324 Density  = 2.642836 
+---------------- Step     4000 ----- CPU =     59.5834 (sec) ----------------
+Step     =           4000 Atoms    =           3259 TotEng   = -3.318769 
+KinEng   = 0.038692 PotEng   = -3.357461 Temp     = 299.429065 
+Press    = -2476.376253 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 60.639434 Pxx      = -1574.863642 Pyy      = -3374.234011 
+Pzz      = -2480.031105 Density  = 2.640203 
+---------------- Step     5000 ----- CPU =     74.0657 (sec) ----------------
+Step     =           5000 Atoms    =           3259 TotEng   = -3.318846 
+KinEng   = 0.037967 PotEng   = -3.356813 Temp     = 293.818446 
+Press    = -3162.373794 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 60.699832 Pxx      = -1952.649685 Pyy      = -4383.374289 
+Pzz      = -3151.097409 Density  = 2.637576 
+---------------- Step     6000 ----- CPU =     88.6775 (sec) ----------------
+Step     =           6000 Atoms    =           3259 TotEng   = -3.319132 
+KinEng   = 0.038761 PotEng   = -3.357893 Temp     = 299.959988 
+Press    = -4085.141094 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 60.760230 Pxx      = -2418.262203 Pyy      = -5163.772676 
+Pzz      = -4673.388404 Density  = 2.634954 
+---------------- Step     7000 ----- CPU =    103.7632 (sec) ----------------
+Step     =           7000 Atoms    =           3259 TotEng   = -3.317784 
+KinEng   = 0.039021 PotEng   = -3.356805 Temp     = 301.973665 
+Press    = -4649.605671 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 60.820628 Pxx      = -2990.559556 Pyy      = -5721.348933 
+Pzz      = -5236.908523 Density  = 2.632338 
+---------------- Step     8000 ----- CPU =    118.2520 (sec) ----------------
+Step     =           8000 Atoms    =           3259 TotEng   = -3.318787 
+KinEng   = 0.038085 PotEng   = -3.356872 Temp     = 294.729105 
+Press    = -5407.318240 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 60.881025 Pxx      = -3886.144069 Pyy      = -6703.960642 
+Pzz      = -5631.850008 Density  = 2.629726 
+---------------- Step     9000 ----- CPU =    133.0257 (sec) ----------------
+Step     =           9000 Atoms    =           3259 TotEng   = -3.318157 
+KinEng   = 0.038955 PotEng   = -3.357112 Temp     = 301.461377 
+Press    = -6268.564321 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 60.941423 Pxx      = -4310.754448 Pyy      = -7616.288920 
+Pzz      = -6878.649594 Density  = 2.627120 
+---------------- Step    10000 ----- CPU =    148.1214 (sec) ----------------
+Step     =          10000 Atoms    =           3259 TotEng   = -3.319062 
+KinEng   = 0.038659 PotEng   = -3.357722 Temp     = 299.173948 
+Press    = -7269.340039 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.001821 Pxx      = -5671.124810 Pyy      = -8257.774264 
+Pzz      = -7879.121043 Density  = 2.624519 
+---------------- Step    11000 ----- CPU =    162.6772 (sec) ----------------
+Step     =          11000 Atoms    =           3259 TotEng   = -3.317561 
+KinEng   = 0.039176 PotEng   = -3.356737 Temp     = 303.172782 
+Press    = -7584.048198 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.062219 Pxx      = -5688.791635 Pyy      = -8722.667057 
+Pzz      = -8340.685904 Density  = 2.621923 
+---------------- Step    12000 ----- CPU =    177.9907 (sec) ----------------
+Step     =          12000 Atoms    =           3259 TotEng   = -3.317508 
+KinEng   = 0.039261 PotEng   = -3.356769 Temp     = 303.829043 
+Press    = -8420.738096 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.122617 Pxx      = -6801.855498 Pyy      = -9311.545306 
+Pzz      = -9148.813484 Density  = 2.619332 
+---------------- Step    13000 ----- CPU =    193.1626 (sec) ----------------
+Step     =          13000 Atoms    =           3259 TotEng   = -3.316604 
+KinEng   = 0.039890 PotEng   = -3.356493 Temp     = 308.693376 
+Press    = -9028.104807 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.183015 Pxx      = -7459.471083 Pyy      = -9762.799377 
+Pzz      = -9862.043962 Density  = 2.616746 
+---------------- Step    14000 ----- CPU =    209.3104 (sec) ----------------
+Step     =          14000 Atoms    =           3259 TotEng   = -3.317941 
+KinEng   = 0.038493 PotEng   = -3.356434 Temp     = 297.886590 
+Press    = -9970.277323 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.243412 Pxx      = -8017.418176 Pyy      = -10712.076800 
+Pzz      = -11181.336993 Density  = 2.614166 
+---------------- Step    15000 ----- CPU =    225.2195 (sec) ----------------
+Step     =          15000 Atoms    =           3259 TotEng   = -3.316036 
+KinEng   = 0.038705 PotEng   = -3.354741 Temp     = 299.526054 
+Press    = -10146.934393 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.303810 Pxx      = -7990.932803 Pyy      = -10960.485963 
+Pzz      = -11489.384412 Density  = 2.611590 
+---------------- Step    16000 ----- CPU =    239.9939 (sec) ----------------
+Step     =          16000 Atoms    =           3259 TotEng   = -3.317575 
+KinEng   = 0.039809 PotEng   = -3.357384 Temp     = 308.071326 
+Press    = -11544.196164 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.364208 Pxx      = -9335.600882 Pyy      = -12217.208681 
+Pzz      = -13079.778929 Density  = 2.609020 
+---------------- Step    17000 ----- CPU =    255.1964 (sec) ----------------
+Step     =          17000 Atoms    =           3259 TotEng   = -3.315816 
+KinEng   = 0.039739 PotEng   = -3.355554 Temp     = 307.526321 
+Press    = -11864.185380 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.424606 Pxx      = -9680.351635 Pyy      = -12780.835216 
+Pzz      = -13131.369288 Density  = 2.606454 
+---------------- Step    18000 ----- CPU =    270.3096 (sec) ----------------
+Step     =          18000 Atoms    =           3259 TotEng   = -3.318025 
+KinEng   = 0.038214 PotEng   = -3.356239 Temp     = 295.727911 
+Press    = -12929.434556 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.485004 Pxx      = -10598.856043 Pyy      = -13415.119585 
+Pzz      = -14774.328040 Density  = 2.603894 
+---------------- Step    19000 ----- CPU =    284.7330 (sec) ----------------
+Step     =          19000 Atoms    =           3259 TotEng   = -3.316451 
+KinEng   = 0.038724 PotEng   = -3.355175 Temp     = 299.673314 
+Press    = -13303.779287 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.545402 Pxx      = -10683.392267 Pyy      = -13915.259226 
+Pzz      = -15312.686369 Density  = 2.601339 
+---------------- Step    20000 ----- CPU =    299.7665 (sec) ----------------
+Step     =          20000 Atoms    =           3259 TotEng   = -3.315004 
+KinEng   = 0.039708 PotEng   = -3.354712 Temp     = 307.291020 
+Press    = -13813.231245 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.605800 Pxx      = -11480.785967 Pyy      = -14558.582054 
+Pzz      = -15400.325715 Density  = 2.598788 
+---------------- Step    21000 ----- CPU =    314.7016 (sec) ----------------
+Step     =          21000 Atoms    =           3259 TotEng   = -3.314548 
+KinEng   = 0.039147 PotEng   = -3.353695 Temp     = 302.946587 
+Press    = -14327.164959 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.666197 Pxx      = -11623.942135 Pyy      = -14990.151604 
+Pzz      = -16367.401137 Density  = 2.596243 
+---------------- Step    22000 ----- CPU =    330.0069 (sec) ----------------
+Step     =          22000 Atoms    =           3259 TotEng   = -3.317102 
+KinEng   = 0.037277 PotEng   = -3.354380 Temp     = 288.478891 
+Press    = -15309.103917 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.726595 Pxx      = -12594.598429 Pyy      = -15951.234560 
+Pzz      = -17381.478764 Density  = 2.593703 
+---------------- Step    23000 ----- CPU =    344.5099 (sec) ----------------
+Step     =          23000 Atoms    =           3259 TotEng   = -3.314918 
+KinEng   = 0.038973 PotEng   = -3.353891 Temp     = 301.601845 
+Press    = -15920.797085 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.786993 Pxx      = -13479.343067 Pyy      = -16081.721059 
+Pzz      = -18201.327129 Density  = 2.591167 
+---------------- Step    24000 ----- CPU =    359.5280 (sec) ----------------
+Step     =          24000 Atoms    =           3259 TotEng   = -3.313934 
+KinEng   = 0.038690 PotEng   = -3.352624 Temp     = 299.410927 
+Press    = -16283.522695 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.847391 Pxx      = -13514.598521 Pyy      = -16109.466306 
+Pzz      = -19226.503259 Density  = 2.588637 
+---------------- Step    25000 ----- CPU =    374.5477 (sec) ----------------
+Step     =          25000 Atoms    =           3259 TotEng   = -3.314766 
+KinEng   = 0.038269 PotEng   = -3.353035 Temp     = 296.149179 
+Press    = -17185.711962 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.907789 Pxx      = -13887.285296 Pyy      = -17593.010111 
+Pzz      = -20076.840479 Density  = 2.586111 
+---------------- Step    26000 ----- CPU =    391.7210 (sec) ----------------
+Step     =          26000 Atoms    =           3259 TotEng   = -3.313897 
+KinEng   = 0.038939 PotEng   = -3.352835 Temp     = 301.334098 
+Press    = -17807.205697 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 61.968187 Pxx      = -14669.007052 Pyy      = -18323.981079 
+Pzz      = -20428.628961 Density  = 2.583591 
+---------------- Step    27000 ----- CPU =    406.2172 (sec) ----------------
+Step     =          27000 Atoms    =           3259 TotEng   = -3.315174 
+KinEng   = 0.038573 PotEng   = -3.353747 Temp     = 298.506577 
+Press    = -18856.675670 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.028584 Pxx      = -15591.799776 Pyy      = -18887.501761 
+Pzz      = -22090.725472 Density  = 2.581075 
+---------------- Step    28000 ----- CPU =    421.3685 (sec) ----------------
+Step     =          28000 Atoms    =           3259 TotEng   = -3.312474 
+KinEng   = 0.039634 PotEng   = -3.352108 Temp     = 306.715214 
+Press    = -19045.714946 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.088982 Pxx      = -15710.701673 Pyy      = -19701.509593 
+Pzz      = -21724.933571 Density  = 2.578564 
+---------------- Step    29000 ----- CPU =    436.2736 (sec) ----------------
+Step     =          29000 Atoms    =           3259 TotEng   = -3.312129 
+KinEng   = 0.039278 PotEng   = -3.351407 Temp     = 303.962789 
+Press    = -19594.101130 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.149380 Pxx      = -16346.433596 Pyy      = -20238.284606 
+Pzz      = -22197.585188 Density  = 2.576058 
+---------------- Step    30000 ----- CPU =    451.5161 (sec) ----------------
+Step     =          30000 Atoms    =           3259 TotEng   = -3.313345 
+KinEng   = 0.037953 PotEng   = -3.351298 Temp     = 293.704569 
+Press    = -20321.173806 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.209778 Pxx      = -17428.553955 Pyy      = -20393.927055 
+Pzz      = -23141.040410 Density  = 2.573557 
+---------------- Step    31000 ----- CPU =    466.1899 (sec) ----------------
+Step     =          31000 Atoms    =           3259 TotEng   = -3.311964 
+KinEng   = 0.038764 PotEng   = -3.350727 Temp     = 299.979732 
+Press    = -20901.568666 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.270176 Pxx      = -17905.963741 Pyy      = -21001.191545 
+Pzz      = -23797.550713 Density  = 2.571061 
+---------------- Step    32000 ----- CPU =    481.9811 (sec) ----------------
+Step     =          32000 Atoms    =           3259 TotEng   = -3.313473 
+KinEng   = 0.037673 PotEng   = -3.351147 Temp     = 291.542217 
+Press    = -21827.160230 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.330574 Pxx      = -17819.894507 Pyy      = -21910.007337 
+Pzz      = -25751.578847 Density  = 2.568570 
+---------------- Step    33000 ----- CPU =    497.4028 (sec) ----------------
+Step     =          33000 Atoms    =           3259 TotEng   = -3.310994 
+KinEng   = 0.038966 PotEng   = -3.349959 Temp     = 301.544333 
+Press    = -22103.868218 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.390971 Pxx      = -18382.393303 Pyy      = -22101.782725 
+Pzz      = -25827.428626 Density  = 2.566083 
+---------------- Step    34000 ----- CPU =    512.2845 (sec) ----------------
+Step     =          34000 Atoms    =           3259 TotEng   = -3.312433 
+KinEng   = 0.038645 PotEng   = -3.351078 Temp     = 299.059926 
+Press    = -23092.969032 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.451369 Pxx      = -19261.084630 Pyy      = -23013.539527 
+Pzz      = -27004.282940 Density  = 2.563602 
+---------------- Step    35000 ----- CPU =    527.2475 (sec) ----------------
+Step     =          35000 Atoms    =           3259 TotEng   = -3.309501 
+KinEng   = 0.039216 PotEng   = -3.348717 Temp     = 303.479538 
+Press    = -23153.734929 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.511767 Pxx      = -19232.545193 Pyy      = -23513.110191 
+Pzz      = -26715.549404 Density  = 2.561125 
+---------------- Step    36000 ----- CPU =    542.0524 (sec) ----------------
+Step     =          36000 Atoms    =           3259 TotEng   = -3.311333 
+KinEng   = 0.038756 PotEng   = -3.350089 Temp     = 299.924093 
+Press    = -24341.954998 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.572165 Pxx      = -20384.257514 Pyy      = -24100.967774 
+Pzz      = -28540.639707 Density  = 2.558653 
+---------------- Step    37000 ----- CPU =    557.4916 (sec) ----------------
+Step     =          37000 Atoms    =           3259 TotEng   = -3.310674 
+KinEng   = 0.038270 PotEng   = -3.348944 Temp     = 296.162699 
+Press    = -24737.335958 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.632563 Pxx      = -20737.742008 Pyy      = -24441.109001 
+Pzz      = -29033.156865 Density  = 2.556185 
+---------------- Step    38000 ----- CPU =    572.3507 (sec) ----------------
+Step     =          38000 Atoms    =           3259 TotEng   = -3.309450 
+KinEng   = 0.037993 PotEng   = -3.347444 Temp     = 294.018275 
+Press    = -25078.543686 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.692961 Pxx      = -20898.503735 Pyy      = -24748.638078 
+Pzz      = -29588.489244 Density  = 2.553723 
+---------------- Step    39000 ----- CPU =    587.2960 (sec) ----------------
+Step     =          39000 Atoms    =           3259 TotEng   = -3.309501 
+KinEng   = 0.038848 PotEng   = -3.348350 Temp     = 300.636733 
+Press    = -26042.741711 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.753359 Pxx      = -21770.788860 Pyy      = -25889.414176 
+Pzz      = -30468.022098 Density  = 2.551265 
+---------------- Step    40000 ----- CPU =    602.6709 (sec) ----------------
+Step     =          40000 Atoms    =           3259 TotEng   = -3.309045 
+KinEng   = 0.038820 PotEng   = -3.347866 Temp     = 300.419992 
+Press    = -26516.247792 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.813756 Pxx      = -22645.464504 Pyy      = -26146.987926 
+Pzz      = -30756.290946 Density  = 2.548812 
+---------------- Step    41000 ----- CPU =    617.7910 (sec) ----------------
+Step     =          41000 Atoms    =           3259 TotEng   = -3.307655 
+KinEng   = 0.039125 PotEng   = -3.346780 Temp     = 302.779916 
+Press    = -26844.830494 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.874154 Pxx      = -22660.556812 Pyy      = -26517.458746 
+Pzz      = -31356.475923 Density  = 2.546363 
+---------------- Step    42000 ----- CPU =    633.1124 (sec) ----------------
+Step     =          42000 Atoms    =           3259 TotEng   = -3.308396 
+KinEng   = 0.038146 PotEng   = -3.346541 Temp     = 295.197130 
+Press    = -27591.590739 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.934552 Pxx      = -23512.768290 Pyy      = -27283.548730 
+Pzz      = -31978.455197 Density  = 2.543919 
+---------------- Step    43000 ----- CPU =    648.5719 (sec) ----------------
+Step     =          43000 Atoms    =           3259 TotEng   = -3.307342 
+KinEng   = 0.038484 PotEng   = -3.345826 Temp     = 297.814979 
+Press    = -27984.803631 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 62.994950 Pxx      = -23895.674934 Pyy      = -27536.563052 
+Pzz      = -32522.172908 Density  = 2.541480 
+---------------- Step    44000 ----- CPU =    664.4380 (sec) ----------------
+Step     =          44000 Atoms    =           3259 TotEng   = -3.308337 
+KinEng   = 0.038097 PotEng   = -3.346434 Temp     = 294.820200 
+Press    = -28978.994021 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 63.055348 Pxx      = -24109.206054 Pyy      = -28893.319583 
+Pzz      = -33934.456425 Density  = 2.539046 
+---------------- Step    45000 ----- CPU =    680.3041 (sec) ----------------
+Step     =          45000 Atoms    =           3259 TotEng   = -3.306579 
+KinEng   = 0.039259 PotEng   = -3.345838 Temp     = 303.812513 
+Press    = -29399.131090 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 63.115746 Pxx      = -25139.423287 Pyy      = -28618.741256 
+Pzz      = -34439.228726 Density  = 2.536616 
+---------------- Step    46000 ----- CPU =    695.2049 (sec) ----------------
+Step     =          46000 Atoms    =           3259 TotEng   = -3.305575 
+KinEng   = 0.039470 PotEng   = -3.345045 Temp     = 305.447903 
+Press    = -29942.947437 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 63.176143 Pxx      = -25212.884338 Pyy      = -29424.845088 
+Pzz      = -35191.112885 Density  = 2.534191 
+---------------- Step    47000 ----- CPU =    710.6844 (sec) ----------------
+Step     =          47000 Atoms    =           3259 TotEng   = -3.306029 
+KinEng   = 0.039383 PotEng   = -3.345412 Temp     = 304.772349 
+Press    = -30718.466119 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 63.236541 Pxx      = -26103.459765 Pyy      = -30330.104970 
+Pzz      = -35721.833621 Density  = 2.531771 
+---------------- Step    48000 ----- CPU =    725.6281 (sec) ----------------
+Step     =          48000 Atoms    =           3259 TotEng   = -3.304985 
+KinEng   = 0.038872 PotEng   = -3.343857 Temp     = 300.817965 
+Press    = -30985.230116 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 63.296939 Pxx      = -26166.076210 Pyy      = -30928.719466 
+Pzz      = -35860.894670 Density  = 2.529355 
+---------------- Step    49000 ----- CPU =    740.0892 (sec) ----------------
+Step     =          49000 Atoms    =           3259 TotEng   = -3.305650 
+KinEng   = 0.038314 PotEng   = -3.343963 Temp     = 296.497655 
+Press    = -31721.001964 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 63.357337 Pxx      = -27168.860741 Pyy      = -31416.377415 
+Pzz      = -36577.767736 Density  = 2.526944 
+---------------- Step    50000 ----- CPU =    754.8206 (sec) ----------------
+Step     =          50000 Atoms    =           3259 TotEng   = -3.303058 
+KinEng   = 0.038827 PotEng   = -3.341885 Temp     = 300.471385 
+Press    = -31706.271201 Lx       = 30.198921 Ly       = 30.198921 
+Lz       = 63.417735 Pxx      = -27742.452851 Pyy      = -30977.764584 
+Pzz      = -36398.596169 Density  = 2.524537 
+Loop time of 754.821 on 1 procs for 50000 steps with 3259 atoms
+
+Performance: 5.723 ns/day, 4.193 hours/ns, 66.241 timesteps/s
+99.9% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 664.27     | 664.27     | 664.27     |   0.0 | 88.00
+Neigh   | 82.066     | 82.066     | 82.066     |   0.0 | 10.87
+Comm    | 2.3392     | 2.3392     | 2.3392     |   0.0 |  0.31
+Output  | 1.5076     | 1.5076     | 1.5076     |   0.0 |  0.20
+Modify  | 3.6017     | 3.6017     | 3.6017     |   0.0 |  0.48
+Other   |            | 1.038      |            |       |  0.14
+
+Nlocal:    3259 ave 3259 max 3259 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:    9141 ave 9141 max 9141 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:    437248 ave 437248 max 437248 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 437248
+Ave neighs/atom = 134.166
+Neighbor list builds = 354
+Dangerous builds = 0
+Total wall time: 0:15:08
